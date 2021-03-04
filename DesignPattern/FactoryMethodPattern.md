@@ -29,11 +29,11 @@ private:
 	TextBox* txtFileNumber;
 	ProgressBar* progressBar;
 public:
-	void Button1_Click()
+    void Button1_Click()
     {
-		ISplitter* splitter =
+        ISplitter* splitter =
             new BinarySplitter();//依赖具体类
-        
+            
         splitter->split();
 	}
 };
@@ -70,7 +70,7 @@ private:
 	TextBox* txtFileNumber;
 	ProgressBar* progressBar;
 public:
-	void Button1_Click()
+    void Button1_Click()
     {
         SplitterFactory factory;
         ISplitter* splitter = factory.CreateSplitter();
@@ -123,10 +123,10 @@ private:
     SplitterFactory* factory;       // 工厂
 public:
     MainForm(SplitterFactory* factory) : factory(factory) {}
-	void Button1_Click()
+    void Button1_Click()
     {
         ISplitter* splitter = factory->CreateSplitter();
-	}
+    }
 };
 ```
 
