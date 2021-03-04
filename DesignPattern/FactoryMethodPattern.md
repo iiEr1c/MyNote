@@ -74,7 +74,7 @@ public:
     {
         SplitterFactory factory;
         ISplitter* splitter = factory.CreateSplitter();
-	}
+    }
 };
 ```
 
