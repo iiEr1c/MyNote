@@ -132,3 +132,7 @@ public:
 
 通过在```MainForm```里添加```SplitterFactory```指针, 利用```虚函数```的运行时延迟绑定特性, 消除了```MainForm```对之前诸如```BinaryFactor```的依赖, 但是对于每一个新增的```Product```, 仍然要继承```SplitterFactory```抽象工厂, 做出具体的实现. 本应在```MainForm```中的实现, 被移动到了```SplitterFactory```的子类中去实现, 从而实现了对```MainForm```的复用.(amend -> extend)
 
+## 总结
++ Factory Method模式用于```隔离```类对象的使用者和具体类型之间的耦合关系. 而```面对一个经常变化的具体类型```, 紧耦合关系(new)会导致软件的脆弱
++ Factory Method模式通过面向对象的手法, 将所要创建的具体对象工作延迟到子类, 从而实现一种```扩展(而非更改)的策略```, 较好地解决了这种紧耦合关系
++ Factory Method模式解决"单个对象"的需求变化. ```缺点在于要求创建方法/参数相同```(如这里的```ISplitter*()```)
