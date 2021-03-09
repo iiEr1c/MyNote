@@ -71,7 +71,8 @@ public:
         {
             if((*begin)->hashString == hashStr)
                 begin = m_progress_list.erase(begin);
-            ++begin;
+            else
+                ++begin;
         }
     }
     void Doing()
