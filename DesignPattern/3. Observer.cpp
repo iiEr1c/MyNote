@@ -69,7 +69,7 @@ public:
         auto end   = m_progress_list.end();
         while(begin != end)
         {
-            if(begin->get()->hashString == hashStr)
+            if((*begin)->hashString == hashStr)
                 begin = m_progress_list.erase(begin);
             ++begin;
         }
@@ -115,7 +115,7 @@ public:
         ALongTimeTask task;
         task.addProgress(std::move(myProgressBar));
         task.addProgress(std::move(myProgressBar2));
-        task.removeProgress("myProgressBar1");
+        task.removeProgress("myProgressBar2");
         task.Doing();
     }
     ~MainForm() {}
