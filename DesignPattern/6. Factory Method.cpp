@@ -108,10 +108,14 @@ void mockApp()
     vec.emplace_back(std::make_unique<PictureEditorFactory>());
 
     std::vector<ButtonClick>buttons;
+    for(auto& i : vec)
+        buttons.emplace_back(std::move(i));
+    /*
     auto begin = vec.begin();
     auto end   = vec.end();
     for(; begin != end; ++begin)
         buttons.emplace_back(std::move(*begin));
+    */
     for(auto& i : buttons)
         i.click();
 }
