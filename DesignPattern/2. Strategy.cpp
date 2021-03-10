@@ -46,10 +46,7 @@ class SalesOrder
 {
 public:
     // explicit just for easy to test...
-    explicit SalesOrder(std::unique_ptr<TaxStrategy> taxstrategy)
-    {
-        strategy = std::move(taxstrategy);
-    }
+    explicit SalesOrder(std::unique_ptr<TaxStrategy> _taxstrategy) : strategy(std::move(_taxstrategy)) {}
     double CalculateTax()
     {
         strategy->calculate();
