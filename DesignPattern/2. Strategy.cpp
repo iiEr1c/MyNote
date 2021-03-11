@@ -59,11 +59,11 @@ private:
 
 int main()
 {
-    std::unique_ptr<TaxStrategy>cnTaxStrategy = std::make_unique<CNTax>();
+    auto cnTaxStrategy = std::make_unique<CNTax>();
     SalesOrder cnSalesOrder(std::move(cnTaxStrategy));
     cnSalesOrder.CalculateTax();
 
-    std::unique_ptr<TaxStrategy>cnTaxStrategy2 = std::make_unique<USTax>();
+    auto cnTaxStrategy2 = std::make_unique<USTax>();
     SalesOrder cnSalesOrder2(std::move(cnTaxStrategy2));
     cnSalesOrder2.CalculateTax();
 }

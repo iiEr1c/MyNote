@@ -118,14 +118,14 @@ private:
 
 int main()
 {
-    std::unique_ptr<UserAndRulerFactory> goldenFactory = std::make_unique<GoldenUserAndRulerFactory>();
-    std::unique_ptr<UserAndRulerFactory> silverFactory = std::make_unique<SilverUserAndRulerFactory>();
+    auto goldenFactory = std::make_unique<GoldenUserAndRulerFactory>();
+    auto silverFactory = std::make_unique<SilverUserAndRulerFactory>();
 
     Calculation goldenCal(std::move(goldenFactory));
     Calculation silverCal(std::move(silverFactory));
 
     goldenCal.calculation();
-    std::cout<<"------------------------------------------------\n";
+    std::cout<<"-------------------------------\n";
     silverCal.calculation();
     return 0;
 }

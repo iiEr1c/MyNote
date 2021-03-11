@@ -48,7 +48,6 @@ int main()
 {
     Application app;
     app.run();
-    std::vector;
     return 0;
 }
 /* a example: unused Template Method pattern's code

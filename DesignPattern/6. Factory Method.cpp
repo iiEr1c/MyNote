@@ -128,13 +128,13 @@ void mockApp()
 void dependConcreteClass()
 {
     // how to return a class object rather than explicit declaration.
-    std::unique_ptr<Editor> text = std::make_unique<TextEditor>();
+    auto text = std::make_unique<TextEditor>();
     text->edit();
 
-    std::unique_ptr<Editor> binary = std::make_unique<BinaryEditor>();
+    auto binary = std::make_unique<BinaryEditor>();
     binary->edit();
 
-    std::unique_ptr<Editor> picture = std::make_unique<PictureEditor>();
+    auto picture = std::make_unique<PictureEditor>();
     picture->edit();
 }
 

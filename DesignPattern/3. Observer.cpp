@@ -112,8 +112,8 @@ class MainForm
 public:
     void button()
     {
-        std::unique_ptr<Progress>myProgressBar = std::make_unique<myProgress>("myProgressBar1");
-        std::unique_ptr<Progress>myProgressBar2 = std::make_unique<myProgress2>("myProgressBar2");
+        auto myProgressBar = std::make_unique<myProgress>("myProgressBar1");
+        auto myProgressBar2 = std::make_unique<myProgress2>("myProgressBar2");
         ALongTimeTask task;
         task.addProgress(std::move(myProgressBar));
         task.addProgress(std::move(myProgressBar2));

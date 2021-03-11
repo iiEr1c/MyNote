@@ -57,8 +57,8 @@ public:
 
 int main()
 {
-    std::unique_ptr<MessageImp> messageImp = std::make_unique<AndroidMessageImp>();
-    std::unique_ptr<Message> message = std::make_unique<MessageLite>(std::move(messageImp));
+    auto messageImp = std::make_unique<AndroidMessageImp>();
+    auto message = std::make_unique<MessageLite>(std::move(messageImp));
     message->login();
     message->sendFile("D:\\test\\text.cpp");
     message->sendMessage("D:\\test\\text.jpg");

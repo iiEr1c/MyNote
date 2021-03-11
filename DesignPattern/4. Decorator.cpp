@@ -60,13 +60,13 @@ public:
 
 int main()
 {
-    std::unique_ptr<Beverage> esp = std::make_unique<Espresso>();
+    auto esp = std::make_unique<Espresso>();
     std::cout<<esp->getDescription()<<": $"<<esp->cost()<<std::endl;
 
-    std::unique_ptr<Beverage> mocha = std::make_unique<Mocha>(std::move(esp));
+    auto mocha = std::make_unique<Mocha>(std::move(esp));
     std::cout<<mocha->getDescription()<<": $"<<mocha->cost()<<std::endl;
 
-    std::unique_ptr<Beverage> mocha_milk = std::make_unique<Milk>(std::move(mocha));
+    auto mocha_milk = std::make_unique<Milk>(std::move(mocha));
     std::cout<<mocha_milk->getDescription()<<": $"<<mocha_milk->cost()<<std::endl;
     return 0;
 }
