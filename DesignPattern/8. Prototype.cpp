@@ -85,7 +85,7 @@ int main()
     goldenUser->UserDoing();
     std::cout<<"newUser's UserDoing:\t";
     newUser->UserDoing();
-    std::cout<<&goldenUser<<std::endl;
-    std::cout<<&newUser<<std::endl;
+    std::cout<<goldenUser.get()<<std::endl;
+    std::cout<<newUser.get()<<std::endl;
     return 0;
 }
