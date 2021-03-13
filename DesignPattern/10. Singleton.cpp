@@ -112,6 +112,14 @@ Singleton* Singleton::getInstance()
 }
 */
 
+/*
+Singleton Singleton::getInstance()
+{
+    static Singleton instance;
+    return instance;
+}
+*/
+
 static std::atomic<Singleton*> m_instance;
 Singleton* Singleton::getInstance()
 {
