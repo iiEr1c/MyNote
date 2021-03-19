@@ -28,7 +28,7 @@ int main()
     auto beg = vec.cbegin();
     auto end = vec.cend();
     Buffer buf;
-    buf.append(ch, 10);         // call [1] 而不是 call [3]
+    buf.append(ch, 10);         // call [3] 而不是 [1]
 }
 ```
 
@@ -56,6 +56,7 @@ public:
     { std::cout<<"template append(...)\n"; }
     */
     // -std = c++17(is_integral_v)
+    // 方式 1
     /*
     template<typename Iter, typename = typename std::enable_if_t<
         !std::is_integral_v<Iter>>>
@@ -63,7 +64,7 @@ public:
     { std::cout<<"template append(...)\n"; }
     */
 
-    // 也可以使用 = 0 操作
+    // 方式 2
     template<typename Iter, std::enable_if_t<
         !std::is_integral_v<Iter>> = 0>
     void append(Iter beg, Iter end)                 // [3]
