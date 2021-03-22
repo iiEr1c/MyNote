@@ -184,7 +184,15 @@ my_class& get_my_class_instance()
 
 ```
 
-### 3.3.2 保护不常更新的数据结构
+#### 3.3.2 保护不常更新的数据结构
 
 读写锁, C++17提供了```std::shared_mutex```和```std::shared_timed_mutex```, C++14只提供了```std::shared_timed_mutex```
 
+
+#### 3.3.3 嵌套锁
+
+不推荐
+
+### 3.4 本章总结
+
+## 4. 同步操作
