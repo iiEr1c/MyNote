@@ -237,7 +237,7 @@ C++标准库对条件变量有两套实现:
 
 使用```unique_lock```的原因: 等待线程必须在等待时间解锁互斥量, 并对互斥量再次上锁, 而```std::lock_guard```没有这么灵活. 如果互斥量在线程休眠期间```保持锁住状态```, 其他线程则无法锁住互斥量.
 
-#### 4.1.2 使用future
+#### 4.2 使用future
 
 当线程需要等待特定事件时, 某种程度上来说需要知道期望的结果. 之后, 线程会周期性(较短的周期, 为了保证较快的响应)的等待或检查时间是否触发, 检查期间也会执行其他任务. 另外, 等待任务期间也可以执行另外的任务, 直到对应的任务触发, 而后等待future的状态会变为```就绪状态```. future可能是和数据相关, 也可能不是. 当事件发生时(状态为就绪), 这个future就不能重置了.
 
@@ -245,3 +245,55 @@ C++标准库有两种future, 声明在```<future>```头文件中:
 
 + ```unique_future```: 只能与```指定事件```关联
 + ```shared_futures```: 能关联```多个事件```
+
+#### 4.2.1 后台任务的返回值
+
+```cpp
+#include <future>
+#include <vector>
+#include <iostream>
+
+class test
+{
+public:
+    int func(int i)
+    {
+        return i;
+    }
+};
+
+int main()
+{
+    auto fn = []() -> int { return 10; };
+    test t2, t3, t4;
+
+    std::vector<std::future<int>>vec;
+    vec.emplace_back(std::async(std::launch::async, std::move(fn)));
+    vec.emplace_back(std::async(std::launch::deferred, &test::func, std::ref(t2), 1));
+    vec.emplace_back(std::async(&test::func, &t3, 2));
+    vec.emplace_back(std::async(&test::func, t4, 3));
+
+    for(auto& i : vec)
+        std::cout<<i.get()<<std::endl;
+    return 0;
+}
+```
+
+
+### 4.2.2 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
