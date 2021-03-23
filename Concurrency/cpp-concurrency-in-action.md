@@ -133,11 +133,11 @@ void transfer(Box &from, Box &to, int num)
 函数```fn```中的```return lk```不需要调用```std::move()```, 编译器会进行[返回值优化](https://en.wikipedia.org/wiki/Copy_elision#Return_value_optimization), ```fn2```函数直接转移```std::unique_lock```实例的所有权, 调用```do_something```可使用正确的数据. 挡在没有必要持有锁的时候, 可以在特定的代码分支对锁进行释放(```release()```)
 
 ```cpp
-std::unique_lock<std::mutex> fn()
+std::unique_lock<std::mutex> get_lock()
 {
     extern std::mutex some_mutex;
     std::unique<std::mutex> lk(some_mutex);
-    fn2();
+    // do something...
     return lk;
 }
 
@@ -173,7 +173,7 @@ void foo()
     resource_ptr->do_something();
 }
 
-// 或则这种
+// 或者这种
 
 class my_class;
 my_class& get_my_class_instance()
@@ -195,4 +195,53 @@ my_class& get_my_class_instance()
 
 ### 3.4 本章总结
 
-## 4. 同步操作
+几种互斥体所有权包装器:
+
+1. ```lock_guard```: 实现严格基于作用域的互斥体所有权包装器
+2. ```unique_lock```: 通用互斥包装器, 允许延迟锁定、锁定的有时限尝试、递归锁定、所有权转移和与条件变量一同使用
+3. ```scoped_lock```: 用于多个互斥体的免死锁 RAII 封装器, 它在作用域块的存在期间占有一或多个互斥
+
+一些API:
+
+1. ```lock```: 锁定给定的可锁定(Lockable)对象, 用免死锁算法避免死锁
+
+
+一些规定:
+
++ BasicLockable: 要求描述提供为执行代理(即线程)提供排他性阻塞语义的类型的最小特征
++ Lockable: 要求扩展BasicLockable要求, 以包含有意图的锁定
++ TimedLockable: 要求描述为执行代理(线程、进程、任务)提供定时排他性阻塞语义的类型特征
+
+|  | 表达式 | 效果 | 返回值 |
+| :----: | :----: | :----: | :----: |
+| BasicLockable | ```m.lock()```和```m.unlock()``` | 阻塞到能为当前执行代理(线程、进程、任务)获得锁为止.若抛异常,则不获得锁; 释放执行代理曾保有的锁.不抛异常. | 
+| Lockable | ```m.try_lock()``` | 试图为当前执行代理(线程、进程、任务)取得锁,```而不阻塞```.若抛异常,则不获得锁. | 得到锁:```true```否则```false``` |
+| TimedLockable | ```m.try_lock_for(duration)```和```m.try_lock_until(time_limit)``` | 阻塞提供的时长,或直至取得 m 上的锁; 阻塞直至提供的限制时间点,或直至取得 m 上的锁. |
+
+
+## 4 同步操作
+
+### 4.1 等待时间或条件
+
+#### 4.1.1 等待条件达成
+
+C++标准库对条件变量有两套实现:
+
++ ```std::condition_variable```
+  + ```wait(unique_lock<mutex>& __lock) noexcept```: 睡眠
+  + ```wait(unique_lock<mutex>& __lock, _Predicate __p) noexcept```: 有条件睡眠
+  + ```notify_one() noexcept```: 唤醒一个正在```wait```的线程
++ ```std::condition_variable_any```
+
+条件变量适用于多个线程重复等待条件成立的情况. 但是当条件只需满足一次即可的情况下, 可以使用```future```
+
+使用```unique_lock```的原因: 等待线程必须在等待时间解锁互斥量, 并对互斥量再次上锁, 而```std::lock_guard```没有这么灵活. 如果互斥量在线程休眠期间```保持锁住状态```, 其他线程则无法锁住互斥量.
+
+#### 4.1.2 使用future
+
+当线程需要等待特定事件时, 某种程度上来说需要知道期望的结果. 之后, 线程会周期性(较短的周期, 为了保证较快的响应)的等待或检查时间是否触发, 检查期间也会执行其他任务. 另外, 等待任务期间也可以执行另外的任务, 直到对应的任务触发, 而后等待future的状态会变为```就绪状态```. future可能是和数据相关, 也可能不是. 当事件发生时(状态为就绪), 这个future就不能重置了.
+
+C++标准库有两种future, 声明在```<future>```头文件中:
+
++ ```unique_future```: 只能与```指定事件```关联
++ ```shared_futures```: 能关联```多个事件```
