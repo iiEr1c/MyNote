@@ -256,10 +256,7 @@ C++标准库有两种future, 声明在```<future>```头文件中:
 class test
 {
 public:
-    int func(int i)
-    {
-        return i;
-    }
+    int func(int i) { return i; }
 };
 
 int main()
@@ -272,7 +269,6 @@ int main()
     vec.emplace_back(std::async(std::launch::deferred, &test::func, std::ref(t2), 1));
     vec.emplace_back(std::async(&test::func, &t3, 2));
     vec.emplace_back(std::async(&test::func, t4, 3));
-
     for(auto& i : vec)
         std::cout<<i.get()<<std::endl;
     return 0;
@@ -280,13 +276,86 @@ int main()
 ```
 
 
-### 4.2.2 
+### 4.2.2 future与任务关联 -> ```std::package_task<>```
+
+std::packaged_task<> 会将future与函数或可调用对象进行绑定.当调用 std::packaged_task<> 对象时,就会调用相关函数或可调用对象,当future状态为就绪时,会存储返回值
+
+```cpp
+#include <future>
+#include <vector>
+#include <iostream>
+
+int main()
+{
+    std::vector<std::packaged_task<int()>>vec;
+    vec.emplace_back([]() -> int { return 1; });
+    vec.emplace_back([]() -> int { return 2; });
+    vec.emplace_back([]() -> int { return 3; });
+    std::packaged_task<int()>task;
+    
+    auto beg = vec.begin();
+    while (beg != vec.end())
+    {
+        task = std::move(*beg);
+        task();
+        beg = vec.erase(beg);
+        auto result = task.get_future();
+        std::cout<<result.get()<<std::endl;
+    }
+    // or use clear
+    // vec.clear();
+
+    return 0;
+}
+```
+
+```packaged_task```若是需要与其他线程交互, 如获取返回值 -> 线程```return``` & ```packaged_task```模板参数需要定义, 无法通用.
 
 
+### 4.2.3 使用std::promise & 异常存储于future中
 
 
+```cpp
+#include <future>
+#include <thread>
+#include <iostream>
+#include <exception>
+
+int main()
+{
+    auto fn = [](int val, std::promise<int> p) {
+        try
+        {
+            throw std::runtime_error("Example");
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr<<"Exception from the thread:"<< e.what()<<'\n';
+            p.set_value(100);
+        }
+        
+    };
+
+    std::promise<int>p;
+    auto fut = p.get_future();
+    std::async(std::launch::async, fn, 10, std::move(p));
+    try
+    {
+        std::cout<<fut.get()<<std::endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"Exception from the thread: "<< e.what() << '\n';
+    }
+    
+    return 0;
+}
+```
 
 
+在多个线程等待的时候, 只有一个线程能获取结果. 当多个线程等待相同事件的结果时, 就需要使用```std::shared_future```来替代```std::future```了
+
+### 4.2.5 多个线程的等待
 
 
 
