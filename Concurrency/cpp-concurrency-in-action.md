@@ -357,12 +357,151 @@ int main()
 
 ### 4.2.5 多个线程的等待
 
+使用```shared_future```即可
+
+```cpp
+std::promise<std::string> p;
+std::shared_future<std::string> sf(p.get_future());     // 隐式转移所有权
+// or
+// std::future<std::string> f(p.get_future());
+// std::shared_future<std::string>sf(std::move(f));
+```
+
+## 4.3 限时等待
+
+本质是表示阻塞当前线程多长时间, 一种是"duration"(```_for```), 另一种是"point"(```_until```).
+
+### 4.3.1 时钟
+
+当前时间: ```chrono::time_point<system_clock, duration> std::chrono::system_clock::now()```
+
+### 4.3.2 时间段
+
+时间段使用标准库的```std::chrono```的```duration```即可.
+
+```cpp
+using namespace std::chrono_literals;
+auto one_day = 24h;
+auto half_an_hour = 30min;
+auto max_time_between_messages = 30ms;
+```
+
+```future```的```wait_for```方法的返回值有三种:
+
++ ```std::future_status::ready```: 结果就绪
++ ```std::future_status::timeout```: 已经过时限
++ ```std::future_status::defered```: 要计算结果的函数仍未启动
+
+注意:
+
++ clock, time_point, duration可能抛出异常, 但```std::chrono```不会抛出
++ 建议实现在调用前检测valid == false的情况抛出以```future_errc::no_state```为```error_condition```的```future_error```
+
+```cpp
+try
+{
+    auto n = fut.get();
+}
+catch(const std::future_error& e)
+{
+    std::cerr<<e.code()<<"\nmessage:"<<e.what()<<std::endl;
+}
+```
+
+### 4.3.3 时间点
+
+```cpp
+std::condition_variable cv;
+std::unique_lock<std::mutex>lk(m);
+while(!done)
+{
+    if(cv.wait_until(lk, timeout)) == std::cv_status::timeout)
+    {
+        //...
+    }
+}
+```
+
+以上的代码为了处理假唤醒, 使得循环的整体长度有限. 
+
+### 4.3.4 使用超时
+
+使用超时的最简单方式, 就是对特定线程添加延迟处理. 当线程无所事事时, 就不会占用其他线程的处理时间
+
+```cpp
+sleep_for();
+sleep_until();
+```
+
+当然, 休眠只是超时处理的一种形式, 超时可以配合条件变量和future一起使用. 超时甚至可以在获取互斥锁时(当互斥量支持超时时)使用. ```std::mutex```和```std::recursive_mutex```不支持超时, 而```std::time_mutex```和```std::recursive_timed_mutex```支持超时
 
 
+可接受超时的函数
+
+| 类型 | 函数 | 返回值 |
+| :----: | :----: | :----: |
+| ```std::this_thread```命名空间 | ```sleep_for(duration)``` | N/A |
+| ```std::this_thread```命名空间 | ```sleep_until(time_point)``` | N/A |
+| ```std::condition_variable```或```std::condition_variable_any``` | ```wait_for(lock, duration)``` | ```std::cv_status::time_out```或```std::cv_status::no_timeout``` |
+| ```std::condition_variable```或```std::condition_variable_any``` | ```wait_until(lock, time_point)``` | ```std::cv_status::time_out```或```std::cv_status::no_timeout``` |
+|| ```wait_for(lock, duration, predicate)``` | ```bool```--当唤醒时,返回谓词的结果 |
+|| ```wait_until(lock, time_point, predicate)``` | ```bool```--当唤醒时,返回谓词的结果 |
+| ```std::timed_mutex```或```std::recursive_timed_mutex``` | ```try_lock_for(duration)``` | ```bool```--获取锁时返回```true```, 否则返回```fasle``` |
+| ```std::timed_mutex```或```std::recursive_timed_mutex``` | ```try_lock_until(time_point)``` | ```bool```--获取锁时返回```true```, 否则返回```fasle``` |
+| ```std::unique_lock<TimedLockable>``` | ```unique_lock(lockable, duration)``` | N/A--对新构建的对象调用```owns_lock()``` |
+| ```std::unique_lock<TimedLockable>``` | ```sleep_until(lockable, time_point)``` | 当获取锁时返回```true```, 否则返回```false``` |
+| | ```try_lock_for(duration)``` | ```bool```--当获取锁时返回```true```, 否则返回```false``` |
+| | ```try_lock_until(time_point)``` | ```bool```--当获取锁时返回```true```, 否则返回```false``` |
+| ```std::future<ValueType>```或```std::shared_future<ValueType>``` | ```wait_for(duration)``` | 等待超时, 返回```std::future_status::timeout``` |
+| ```std::future<ValueType>```或```std::shared_future<ValueType>```| ```wait_until(time_point)``` | 当期望值准备就绪时, 返回```std::future_status::ready``` |
+| ```std::future<ValueType>```或```std::shared_future<ValueType>``` | ```wait_until(time_point)``` | 当期望值持有一个为启动的延迟函数, 返回```std::future_status::deferred``` |
 
 
+## 4.4 简化代码
+
+### 4.4.1 使用future的函数化编程
+
+### 4.4.2 使用消息传递的同步操作
+
+CSP: 没有共享数据时, 每个线程可以基于所接收到的信息独立运行. 每个线程就都有状态机: 收到一条信息, 会以某种方式更新状态, 并且可能向其他线程发出信息(消息处理机制依赖于线程的初始化状态)
+
+### 4.4.5 等待多个future
+
+假设有很多的数据需要处理, 每个数据都可以单独的进行处理, 这就是利用硬件的好机会. 可以使用异步任务组来处理数据项, 每个任务通过future返回处理结果. 不过, 需要等待所有任务完成, 才能得到最终的结果.对逐个future进行收集, 然后再整理结果, 总感觉不是很爽. 如果用异步任务来收集结果, 先要生成异步任务, 这样就会占用线程的资源, 并且需要不断的对future进行轮询, 当所有future状态为就绪时生成新的任务
 
 
+### 4.4.7 锁存器和栅栏(std::latch和std::barrier)
+
+```std::latch```: 锁存器是一种同步对象, 当计数器减为0时(没有可能增加或重置计数器), 就处于就绪态了. 锁存器是基于其输出特性--当处于就绪态时, 就会保持就绪态, 直到被销毁. 因此, 锁存器是为同步一系列事件的轻量级机制
+
+```std::barrier```: 栅栏是一种可复用的同步机制, 其用于一组线程间的内部同步. 虽然, 锁存器不在乎是哪个线程使得计数器递减--同一个线程可以对计数器递减多次, 或多个线程对计数器递减一次, 再或是有些线程对计数器有两次的递减. 对于栅栏来说, 每一个线程```只能```在每个周期到达栅栏一次. 当线程都抵达栅栏时, 会对线程进行阻塞, 直到所有线程都达到栅栏处, 这时阻塞将会被解除. 栅栏可以复用--线程可以再次到达栅栏处, 等待下一个周期的所有线程.
+
+```latch```可用于实现以下类似的操作:(C++20以上)
+
+```cpp
+#include <latch>
+#include <vector>
+#include <future>
+
+int main()
+{
+    std::vector<std::future<void>> threads;
+    const int threads_count = 10;
+    int data[threads_count];
+    std::latch done(threads_count);
+    for(int i = 0; i < threads_count; ++i)
+    {
+        threads.emplace_back(std::async(std::launch::async, [&, i]{
+            data[i] = i;
+            done.count_down();
+            //...
+        }));
+    }
+
+    done.wait();
+    //process_data...
+}
+```
 
 
 
