@@ -30,6 +30,7 @@ std::shared_ptr<Singleton> Singleton::getInstance()
     if(m_instance == nullptr)
     {
         std::lock_guard<std::mutex>lk(lock);
+        if(m_instance == nullptr)
             m_instance = std::make_shared<Singleton>();
     }
     else
