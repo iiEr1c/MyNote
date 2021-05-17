@@ -106,7 +106,7 @@ Singleton* Singleton::getInstance()
         if(tmp == nullptr)
         {
             tmp = new Singleton();
-            m_instance.store(tmp, std::memory_order_relaxed);
+            m_instance.store(tmp, std::memory_order_release);
         }
     }
     return tmp;
